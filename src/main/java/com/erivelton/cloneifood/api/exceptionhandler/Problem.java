@@ -1,6 +1,7 @@
 package com.erivelton.cloneifood.api.exceptionhandler;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,10 +19,11 @@ public class Problem {
 	private String type;
 	private String title;
 	private String detail;
-	
 	private String userMessage;
 	
 	@JsonFormat(pattern = "MM/dd/yyyy HH:mm:ss")
 	private LocalDateTime timestamp;
+	
+	private List<DetailField> detailFields;
 	
 }

@@ -1,15 +1,20 @@
 package com.erivelton.cloneifood.api.exceptionhandler;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -28,9 +33,12 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
+	@Autowired
+	private MessageSource messageSource;
+	
 	private static final String MSG_GENERICA = "Ocorreu um erro interno inesperado no sistema." + 
 			"Tente novamente e se o problema persistir, entre em contato" + 
-			"com o administrador do sistema.";
+			"com o administrador do sistema.";  
 
 	//Outra exceção a ser mapeada é o MismatchedInputException que é quando insere um valor diferente que um campo espera como exemplo
 	//"taxaFrete":true	
@@ -83,14 +91,20 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 		return handleExceptionInternal(ex, problem, headers, status, request);
 	}
 	
-	private ResponseEntity<Object> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, HttpHeaders headers, HttpStatus status, WebRequest request){
+	@Override
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+
+		List<DetailField> detailFields = ex.getBindingResult().getFieldErrors().stream()
+				.map(field -> DetailField.builder()
+						.name(field.getField())
+						.userMessage(messageSource.getMessage(field, LocaleContextHolder.getLocale()))
+						.build())
+				.collect(Collectors.toList());
 		
-		Problem problem = createProblemBuilder(
-				HttpStatus.BAD_REQUEST,
-				ProblemType.PARAMETRO_INVALIDO, 
-				"Erro ao passar o valor '" + ex.getValue() + "' para o parâmetro de URL '" + ex.getName()
-				+ "'. Insira um valor do tipo " + ex.getRequiredType().getSimpleName()
-		).build();
+		Problem problem = createProblemBuilder(status, ProblemType.DADOS_INVALIDOS, "Um ou mias campos da requisição estão inválidos")
+			.detailFields(detailFields)
+			.build();
 		
 		return handleExceptionInternal(ex, problem, headers, status, request);
 	}
@@ -105,14 +119,14 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 	
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<?> handleException(Exception ex, HttpHeaders headers, WebRequest request){
+	public ResponseEntity<?> handleGeneric(Exception ex, WebRequest request){
 		
 		Problem problem = createProblemBuilder(HttpStatus.INTERNAL_SERVER_ERROR, ProblemType.ERRO_DO_SISTEMA, 
 				"Ocorreu um erro interno inesperado no sistema." + 
 				"Tente novamente e se o problema persistir, entre em contato" + 
 				"com o administrador do sistema.").build();
 		
-		return handleExceptionInternal(ex, problem, headers, HttpStatus.INTERNAL_SERVER_ERROR, request);
+		return handleExceptionInternal(ex, problem, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
 	}
 
 	@ExceptionHandler(NegocioException.class)
@@ -172,13 +186,25 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 		
 		return handleExceptionInternal(rootCause, problem, headers, status, request);
 	}
+
+	private ResponseEntity<Object> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, HttpHeaders headers, HttpStatus status, WebRequest request){
+		
+		Problem problem = createProblemBuilder(
+				HttpStatus.BAD_REQUEST,
+				ProblemType.PARAMETRO_INVALIDO, 
+				"Erro ao passar o valor '" + ex.getValue() + "' para o parâmetro de URL '" + ex.getName()
+				+ "'. Insira um valor do tipo " + ex.getRequiredType().getSimpleName()
+				).build();
+		
+		return handleExceptionInternal(ex, problem, headers, status, request);
+	}
 	
 	@Override
 	protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {
 		
 		if (body == null) {
-			body = Problem.builder().status(status.value()).title(status.getReasonPhrase()).build();
+			body = Problem.builder().status(status.value()).title(status.getReasonPhrase()).timestamp(LocalDateTime.now()).build();
 		} else if (body instanceof String) {
 			body = Problem.builder().status(status.value()).title((String) body).build();
 		}

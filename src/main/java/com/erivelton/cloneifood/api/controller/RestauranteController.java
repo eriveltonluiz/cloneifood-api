@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class RestauranteController {
 	private RestauranteService restauranteService;
 	
 	@PostMapping
-	public ResponseEntity<String> save(@RequestBody Restaurante restaurante) {
+	public ResponseEntity<String> save(@RequestBody @Valid Restaurante restaurante) {
 		String retorno = restauranteService.save(restaurante);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(retorno);
