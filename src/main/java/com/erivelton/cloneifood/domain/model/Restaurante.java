@@ -54,7 +54,7 @@ public class Restaurante {
 	@UpdateTimestamp
 	@Column(name = "data_atualizacao", nullable = false, columnDefinition = "datetime")
 	private LocalDateTime dataAtualizacao;
-	
+	 
 	@JsonIgnore
 	@Embedded
 	private Endereco endereco;
