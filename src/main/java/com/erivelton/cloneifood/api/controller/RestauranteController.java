@@ -7,15 +7,19 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.Valid;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.erivelton.cloneifood.domain.exception.EntidadeNaoEncontradaException;
 import com.erivelton.cloneifood.domain.model.Restaurante;
 import com.erivelton.cloneifood.domain.repository.RestauranteRepository;
 import com.erivelton.cloneifood.domain.service.RestauranteService;
@@ -34,7 +38,8 @@ public class RestauranteController {
 	private RestauranteService restauranteService;
 	
 	@PostMapping
-	public ResponseEntity<String> save(@RequestBody @Valid Restaurante restaurante) {
+	public ResponseEntity<String> save(
+			@RequestBody @Valid Restaurante restaurante) {
 		String retorno = restauranteService.save(restaurante);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(retorno);
@@ -45,6 +50,20 @@ public class RestauranteController {
 		List<Restaurante> restaurantes = restauranteRepository.findAll();
 		restaurantes.get(0).getCozinha().getNome();
 		return restaurantes;
+	}
+	
+	@PutMapping("/{id}")
+	public void atualizar(@RequestBody @Valid Restaurante restaurante, @PathVariable Long id) {
+		try {
+			Restaurante restauranteAtual = restauranteRepository.getById(id);
+			
+			BeanUtils.copyProperties(restaurante, restauranteAtual,
+					"id", "formasPagamento", "endereco", "dataCadastro", "produtos");
+
+			restauranteService.save(restauranteAtual);
+		} catch (EntidadeNaoEncontradaException e) {
+			throw new EntidadeNaoEncontradaException(e.getMessage());
+		}
 	}
 	
 	@GetMapping("/por-restaurante")

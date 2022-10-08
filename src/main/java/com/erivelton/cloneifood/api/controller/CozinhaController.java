@@ -5,6 +5,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,13 +56,13 @@ public class CozinhaController {
 	
 	@PostMapping
 	@Transactional
-	public void save(@RequestBody Cozinha cozinha) {
+	public void save(@RequestBody @Valid Cozinha cozinha) {
 		cozinhaRepository.save(cozinha);
 	}
 	
 	@PutMapping("/{id}")
 	@Transactional
-	public ResponseEntity<Cozinha> update(@RequestBody Cozinha cozinha, @PathVariable Long id){
+	public ResponseEntity<Cozinha> update(@RequestBody @Valid Cozinha cozinha, @PathVariable Long id){
 		Cozinha cozinhaAtual = cozinhaRepository.findById(id).get();
 		
 		BeanUtils.copyProperties(cozinha, cozinhaAtual);
@@ -74,6 +75,5 @@ public class CozinhaController {
 	@DeleteMapping("/{id}")
 	public void delete(@PathVariable Long id) {
 		cozinhaService.deleteById(id);
-//		.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 	}
 }

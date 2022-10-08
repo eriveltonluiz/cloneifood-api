@@ -37,8 +37,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	private MessageSource messageSource;
 	
 	private static final String MSG_GENERICA = "Ocorreu um erro interno inesperado no sistema." + 
-			"Tente novamente e se o problema persistir, entre em contato" + 
-			"com o administrador do sistema.";  
+			" Tente novamente e se o problema persistir, entre em contato" + 
+			" com o administrador do sistema.";  
 
 	//Outra exceção a ser mapeada é o MismatchedInputException que é quando insere um valor diferente que um campo espera como exemplo
 	//"taxaFrete":true	
@@ -86,6 +86,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {
+		
 		Problem problem = createProblemBuilder(status, ProblemType.RECURSO_NAO_ENCONTRADO, String.format("Recurso %s não encontrado", ex.getRequestURL())).build();
 
 		return handleExceptionInternal(ex, problem, headers, status, request);
@@ -102,7 +103,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 						.build())
 				.collect(Collectors.toList());
 		
-		Problem problem = createProblemBuilder(status, ProblemType.DADOS_INVALIDOS, "Um ou mias campos da requisição estão inválidos")
+		Problem problem = createProblemBuilder(status, ProblemType.DADOS_INVALIDOS, "Um ou mais campos da requisição estão inválidos")
 			.detailFields(detailFields)
 			.build();
 		
@@ -123,8 +124,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 		
 		Problem problem = createProblemBuilder(HttpStatus.INTERNAL_SERVER_ERROR, ProblemType.ERRO_DO_SISTEMA, 
 				"Ocorreu um erro interno inesperado no sistema." + 
-				"Tente novamente e se o problema persistir, entre em contato" + 
-				"com o administrador do sistema.").build();
+				" Tente novamente e se o problema persistir, entre em contato" + 
+				" com o administrador do sistema.").build();
 		
 		return handleExceptionInternal(ex, problem, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
 	}

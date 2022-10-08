@@ -21,10 +21,14 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
+import javax.validation.groups.ConvertGroup;
+import javax.validation.groups.Default;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.erivelton.cloneifood.core.validaton.Groups;
+import com.erivelton.cloneifood.core.validaton.TaxaFrete;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -49,7 +53,8 @@ public class Restaurante {
 	@NotBlank
 	private String nome;
 
-	@PositiveOrZero
+	@TaxaFrete
+	@PositiveOrZero(message = "{TaxaFrete.invalida}")
 	@Column(name = "taxa_frete", nullable = false)
 	private BigDecimal taxaFrete;
 	
@@ -68,6 +73,7 @@ public class Restaurante {
 //	@JsonIgnore
 	@Valid
 	@NotNull
+	@ConvertGroup(from = Default.class, to = Groups.CozinhaId.class)
 	@JsonIgnoreProperties("hibernateLazyInitializer")
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "cozinha_id", nullable = false)
